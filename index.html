@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>狐祖 · 十种画风三引擎对照评选</title>
+<style>
+:root{
+  --bg:#0a0a14; --card:#111524; --text:#e0d8c8; --muted:rgba(200,180,140,.45);
+  --head:#d4c8a8; --line:rgba(180,160,120,.15); --gold:rgba(220,180,100,.75);
+  --ok:#8c8; --seed:#7eb8d4; --gpt:#d4a06a; --gem:#b08cd4;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+  font-family:"PingFang SC","Noto Serif SC",serif;line-height:1.55}
+a{color:var(--gold);text-decoration:none}
+.app{display:flex;min-height:100vh}
+.sidebar{position:fixed;left:0;top:0;width:220px;height:100vh;overflow-y:auto;
+  background:#0d1020;border-right:1px solid var(--line);padding:18px 0 40px;z-index:20}
+.sidebar .brand{padding:8px 18px 16px;font-size:13px;letter-spacing:.14em;color:var(--head)}
+.sidebar .brand small{display:block;margin-top:6px;font-size:11px;color:var(--muted);letter-spacing:.04em}
+.sidebar a{display:block;padding:9px 18px;font-size:13px;color:rgba(220,200,160,.55);
+  border-left:2px solid transparent}
+.sidebar a:hover,.sidebar a.active{color:var(--head);background:rgba(180,150,100,.06);
+  border-left-color:rgba(220,180,100,.55)}
+.sidebar a .n{opacity:.45;margin-right:6px;font-size:11px}
+.main{margin-left:220px;flex:1;min-width:0;padding:28px 28px 80px}
+.hero{max-width:1280px;margin:0 auto 28px}
+.hero h1{font-size:clamp(28px,4vw,44px);font-weight:500;letter-spacing:.12em;color:var(--head);margin:0 0 10px}
+.hero p{margin:0 0 8px;color:var(--muted);font-size:14px}
+.hero .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chip{font-size:11px;letter-spacing:.06em;padding:4px 10px;border-radius:999px;
+  border:1px solid var(--line);color:var(--muted)}
+.chip.seed{border-color:rgba(126,184,212,.35);color:var(--seed)}
+.chip.gpt{border-color:rgba(212,160,106,.35);color:var(--gpt)}
+.chip.gem{border-color:rgba(176,140,212,.35);color:var(--gem)}
+.toolbar{max-width:1280px;margin:0 auto 22px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+  padding:14px 16px;background:var(--card);border:1px solid var(--line);border-radius:10px;
+  position:sticky;top:10px;z-index:10}
+.toolbar .label{font-size:12px;color:var(--muted);letter-spacing:.08em}
+.toolbar button{font-size:12px;letter-spacing:.06em;color:var(--head);background:transparent;
+  border:1px solid var(--line);border-radius:6px;padding:7px 12px;cursor:pointer}
+.toolbar button:hover{border-color:rgba(220,180,100,.45)}
+.toolbar button.primary{background:rgba(220,180,100,.12);border-color:rgba(220,180,100,.35)}
+#selCount{color:var(--gold);font-size:13px;margin-left:auto}
+.section{max-width:1280px;margin:0 auto 42px;scroll-margin-top:90px}
+.sec-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:14px;
+  padding-bottom:12px;border-bottom:1px solid var(--line)}
+.sec-num{font-size:12px;color:var(--muted);letter-spacing:.16em;min-width:42px;padding-top:6px}
+.sec-head h2{margin:0 0 6px;font-size:22px;font-weight:500;color:var(--head);letter-spacing:.08em}
+.sec-head .tags{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}
+.tag{font-size:11px;padding:2px 8px;border-radius:999px;background:rgba(180,150,100,.08);
+  border:1px solid var(--line);color:rgba(220,200,160,.55)}
+.explain{font-size:14px;color:rgba(224,216,200,.78);max-width:920px}
+.explain b{color:var(--head);font-weight:500}
+.explain .fit{margin-top:6px;font-size:13px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:1100px){.grid{grid-template-columns:1fr 1fr}.sidebar{display:none}.main{margin-left:0}}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;
+  transition:border-color .2s, box-shadow .2s, transform .2s;position:relative}
+.card:hover{border-color:rgba(220,180,100,.35);box-shadow:0 10px 28px rgba(0,0,0,.35);transform:translateY(-2px)}
+.card.selected{border-color:rgba(220,180,100,.7);box-shadow:0 0 0 1px rgba(220,180,100,.35)}
+.card .img-wrap{aspect-ratio:16/10;background:#0a0d16;cursor:zoom-in;overflow:hidden}
+.card img{width:100%;height:100%;object-fit:cover;display:block}
+.card .meta{padding:12px 12px 14px}
+.card .engine{font-size:11px;letter-spacing:.1em;margin-bottom:4px}
+.card .engine.seed{color:var(--seed)}
+.card .engine.gpt{color:var(--gpt)}
+.card .engine.gem{color:var(--gem)}
+.card .title{font-size:14px;color:var(--head);margin-bottom:4px}
+.card .note{font-size:12px;color:var(--muted)}
+.card .pick{position:absolute;top:10px;left:10px;z-index:2;display:flex;align-items:center;gap:6px;
+  background:rgba(10,10,20,.72);border:1px solid rgba(180,160,120,.25);border-radius:999px;
+  padding:5px 10px;font-size:12px;color:var(--head);backdrop-filter:blur(6px);cursor:pointer}
+.card .pick input{accent-color:#c9a45c;width:14px;height:14px}
+.missing{aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;
+  color:var(--muted);font-size:13px;background:#0a0d16;border-bottom:1px solid var(--line)}
+.lb{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;
+  z-index:100;padding:24px;flex-direction:column;gap:12px}
+.lb.open{display:flex}
+.lb img{max-width:min(96vw,1400px);max-height:82vh;object-fit:contain;border-radius:6px}
+.lb .cap{color:var(--head);font-size:14px}
+.lb .close{position:absolute;top:18px;right:22px;font-size:28px;color:#fff;cursor:pointer;opacity:.7}
+.panel{max-width:1280px;margin:30px auto 0;padding:18px;border:1px solid var(--line);
+  border-radius:10px;background:var(--card)}
+.panel h3{margin:0 0 10px;font-size:16px;color:var(--head);letter-spacing:.08em}
+#picks{font-size:13px;color:rgba(224,216,200,.8);white-space:pre-wrap;min-height:40px}
+.foot{max-width:1280px;margin:28px auto 0;color:var(--muted);font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">狐祖 · 画风对照<small>三引擎 · 可勾选评选</small></div>
+    <nav id="nav"></nav>
+  </aside>
+  <main class="main">
+    <div class="hero">
+      <h1>十种画风 × 三引擎对照</h1>
+      <p>统一场景：雾中竹林溪涧旁女侠，手按剑柄，远山层叠，静谧肃杀。只换画风描述。</p>
+      <p>引擎列：Seedream 5.0 Pro（火山直连）· GPT Image · Gemini。GPT 的 07 青绿缺一张，已空位标注。</p>
+      <p>重复已清理：ChatGPT <code>14_09_20</code> 与 <code>14_09_29</code> 内容完全相同，只保留一张进 06 院体组。</p>
+      <div class="meta">
+        <span class="chip seed">Seedream 5.0 Pro</span>
+        <span class="chip gpt">GPT Image</span>
+        <span class="chip gem">Gemini</span>
+        <span class="chip">控制变量 · 同场景</span>
+        <span class="chip">点击图放大 · 勾选评选</span>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <span class="label">快捷</span>
+      <button onclick="pickEngine('seed')">全选 Seedream</button>
+      <button onclick="pickEngine('gpt')">全选 GPT</button>
+      <button onclick="pickEngine('gem')">全选 Gemini</button>
+      <button onclick="clearPicks()">清空</button>
+      <button class="primary" onclick="exportPicks()">导出评选结果</button>
+      <span id="selCount">已选 0</span>
+    </div>
+
+    <div id="content"></div>
+
+    <div class="panel">
+      <h3>当前评选</h3>
+      <div id="picks">尚未勾选。每个画风可多选引擎对照，最终导出一份清单。</div>
+    </div>
+    <div class="foot">本地页 · 图在 originals/thumbs · 生成自狐祖画风对照 2026-08-12</div>
+  </main>
+</div>
+
+<div class="lb" id="lb" onclick="if(event.target===this)closeLb()">
+  <div class="close" onclick="closeLb()">×</div>
+  <img id="lbImg" alt="" />
+  <div class="cap" id="lbCap"></div>
+</div>
+
+<script>
+const STYLES = [
+  {
+    id:"01", name:"胡金铨式",
+    tags:["电影摄影","空/禅","山水气韵","人小景大"],
+    explain:"宋明山水的活动化。大远景、真实山岚、留白构图、伊士曼胶片微褪色。人是山水的一部分，不是视觉中心霸占者。",
+    fit:"正统宋画电影感，格调高，适合全片底盘。"
+  },
+  {
+    id:"02", name:"邵氏70年代",
+    tags:["电影摄影","艳/假/狠","棚拍戏剧光","Technicolor"],
+    explain:"与胡金铨相反：棚内搭景人工感、正红明黄、彩色戏剧灯光、干冰雾、变焦镜头扁平感。舞台化浪漫。",
+    fit:"怀旧/强风格化段落，不宜当全片唯一底盘。"
+  },
+  {
+    id:"03", name:"一代宗师式",
+    tags:["电影摄影","黑金","克制奢华","浅景深"],
+    explain:"王家卫 × Le Sourd：极低调布光、黑金色、雨水与烟、丝绸高光雕刻。宋画留白在这里变成大面积黑。",
+    fit:"情绪浓度高的近景/雨夜/对峙。"
+  },
+  {
+    id:"04", name:"刺客聂隐娘式",
+    tags:["电影摄影","静观","自然光","考据"],
+    explain:"侯孝贤 × 李屏宾：全自然光、长镜头静观距离、大地色系、风吹草木的真实时间感。最接近宋画气韵的写实路线。",
+    fit:"写实高级感、慢节奏、外景戏。"
+  },
+  {
+    id:"05", name:"90年代志怪港片",
+    tags:["电影摄影","青蓝gel","妖气","柔焦光晕"],
+    explain:"徐克/程小东路线：青蓝灯光、逆光浓雾、白绫与长发、月色魅影。宋画底子上加一层聊斋幽冥浪漫。",
+    fit:"志怪/人鬼/狐妖戏首选。"
+  },
+  {
+    id:"06", name:"院体水墨感 · 实拍活水墨",
+    tags:["实拍调色","外景层雾","消色","非插画"],
+    explain:"v3 实拍规格：主体永远是照片。多层真实雾气形成墨阶，调色近乎消色只留暖绢底。禁止 painting/brushwork 词。",
+    fit:"要「活水墨」又要真人皮肤与布料时用；比博物馆复刻更可拍。"
+  },
+  {
+    id:"07", name:"青绿山水感 · 实拍矿彩",
+    tags:["实拍服化道","石青石绿","灯光金边"],
+    explain:"矿彩来自服化道与灯光，不来自笔触。青绿绸缎、鎏金剑具、青玉色山光——《妖猫传》级重彩实拍逻辑。",
+    fit:"华丽国潮段落；大众接受度高。"
+  },
+  {
+    id:"08", name:"写意水墨感 · 英雄式白雾慢门",
+    tags:["实拍","高调留白","慢门拖影","《英雄》"],
+    explain:"写意笔触 = 长曝光动态模糊：黑衣在过曝白雾里甩出的轨迹即飞白。与 09《影》灰调工整水墨区分开。",
+    fit:"动作高潮/写意瞬间，不宜长段日常戏。"
+  },
+  {
+    id:"09", name:"张艺谋《影》式",
+    tags:["电影摄影","水墨黑白","仅肤色","工整"],
+    explain:"真人实拍抽色：世界黑白灰，只留肤色。水墨屏风、雨、对称仪式感。介于电影与绘画之间的折中。",
+    fit:"要水墨感又要真人质感的折中方案。"
+  },
+  {
+    id:"10", name:"壁画岩彩感 · 实拍夜戏",
+    tags:["实拍","哑光矿物调","火光夜戏","志怪"],
+    explain:"岩彩的哑光沉着 = 低饱和哑光调色；朱砂石绿落在真实织物与壁画布景上；志怪用烟雾+逆光人影。",
+    fit:"志怪+历史厚重感，夜戏/祠堂/壁画空间。"
+  }
+];
+
+const ENGINES = [
+  {key:"seed", label:"Seedream 5.0 Pro", cls:"seed"},
+  {key:"gpt", label:"GPT Image", cls:"gpt"},
+  {key:"gem", label:"Gemini", cls:"gem"}
+];
+
+function hasThumb(id, eng){
+  // 07 gpt missing
+  if(id==="07" && eng==="gpt") return false;
+  return true;
+}
+function thumbPath(id, eng){
+  const map={seed:"seedream", gpt:"gpt", gem:"gemini"};
+  return "thumbs/"+id+"_"+map[eng]+".jpg";
+}
+function fullPath(id, eng){
+  const map={seed:"seedream", gpt:"gpt", gem:"gemini"};
+  // prefer png for seed/gpt, jpeg for gem
+  if(eng==="gem") return "originals/"+id+"_gemini.jpeg";
+  if(eng==="gpt") return "originals/"+id+"_gpt.png";
+  return "originals/"+id+"_seedream.png";
+}
+
+const picks = new Set(); // "01|seed"
+
+function render(){
+  const nav=document.getElementById("nav");
+  const root=document.getElementById("content");
+  nav.innerHTML=""; root.innerHTML="";
+  STYLES.forEach(s=>{
+    const a=document.createElement("a");
+    a.href="#s"+s.id; a.innerHTML='<span class="n">'+s.id+'</span>'+s.name;
+    nav.appendChild(a);
+
+    const sec=document.createElement("section");
+    sec.className="section"; sec.id="s"+s.id;
+    const tags=s.tags.map(t=>'<span class="tag">'+t+'</span>').join("");
+    sec.innerHTML=
+      '<div class="sec-head">'+
+        '<div class="sec-num">STYLE '+s.id+'</div>'+
+        '<div><h2>'+s.name+'</h2><div class="tags">'+tags+'</div>'+
+        '<div class="explain">'+s.explain+'<div class="fit"><b>适合：</b>'+s.fit+'</div></div></div>'+
+      '</div><div class="grid" id="g'+s.id+'"></div>';
+    root.appendChild(sec);
+
+    const g=sec.querySelector("#g"+s.id);
+    ENGINES.forEach(eng=>{
+      const card=document.createElement("div");
+      card.className="card";
+      card.dataset.key=s.id+"|"+eng.key;
+      const key=s.id+"|"+eng.key;
+      if(picks.has(key)) card.classList.add("selected");
+      let body="";
+      if(!hasThumb(s.id, eng.key)){
+        body='<div class="missing">本引擎未出图<br/>（GPT 缺 07 青绿）</div>';
+      }else{
+        body='<div class="img-wrap" onclick="openLb(\''+fullPath(s.id,eng.key)+'\',\''+s.name+' · '+eng.label+'\')">'+
+             '<img src="'+thumbPath(s.id,eng.key)+'" alt="'+s.name+' '+eng.label+'"></div>';
+      }
+      const disabled = !hasThumb(s.id, eng.key) ? "disabled" : "";
+      card.innerHTML=
+        '<label class="pick"><input type="checkbox" '+disabled+' '+(picks.has(key)?"checked":"")+
+        ' onchange="togglePick(this,\''+key+'\')">选中</label>'+
+        body+
+        '<div class="meta"><div class="engine '+eng.cls+'">'+eng.label+'</div>'+
+        '<div class="title">'+s.name+'</div>'+
+        '<div class="note">'+(hasThumb(s.id,eng.key)?"点击图片放大原图":"无文件")+'</div></div>';
+      g.appendChild(card);
+    });
+  });
+  updateCount();
+  spy();
+}
+
+function togglePick(el, key){
+  const card=document.querySelector('.card[data-key="'+key+'"]');
+  if(el.checked){ picks.add(key); card&&card.classList.add("selected"); }
+  else { picks.delete(key); card&&card.classList.remove("selected"); }
+  updateCount();
+}
+function pickEngine(eng){
+  STYLES.forEach(s=>{
+    if(!hasThumb(s.id, eng)) return;
+    picks.add(s.id+"|"+eng);
+  });
+  render();
+}
+function clearPicks(){ picks.clear(); render(); }
+function updateCount(){
+  document.getElementById("selCount").textContent="已选 "+picks.size;
+  const lines=[];
+  [...picks].sort().forEach(k=>{
+    const [id,eng]=k.split("|");
+    const st=STYLES.find(x=>x.id===id);
+    const en=ENGINES.find(x=>x.key===eng);
+    lines.push(id+" · "+(st?st.name:"?")+" · "+(en?en.label:eng));
+  });
+  document.getElementById("picks").textContent = lines.length? lines.join("\n") : "尚未勾选。每个画风可多选引擎对照，最终导出一份清单。";
+}
+function exportPicks(){
+  const lines=["# 狐祖画风对照 · 评选结果", "", "时间： "+new Date().toLocaleString("zh-CN"), "", "| 编号 | 画风 | 引擎 |", "|---|---|---|" ];
+  [...picks].sort().forEach(k=>{
+    const [id,eng]=k.split("|");
+    const st=STYLES.find(x=>x.id===id);
+    const en=ENGINES.find(x=>x.key===eng);
+    lines.push("| "+id+" | "+(st?st.name:"")+" | "+(en?en.label:eng)+" |");
+  });
+  if(!picks.size) lines.push("", "（空）");
+  const blob=new Blob([lines.join("\n")],{type:"text/markdown;charset=utf-8"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="狐祖画风对照_评选结果.md";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function openLb(src, cap){
+  document.getElementById("lbImg").src=src;
+  document.getElementById("lbCap").textContent=cap;
+  document.getElementById("lb").classList.add("open");
+}
+function closeLb(){ document.getElementById("lb").classList.remove("open"); }
+document.addEventListener("keydown", e=>{ if(e.key==="Escape") closeLb(); });
+
+function spy(){
+  const links=[...document.querySelectorAll(".sidebar a")];
+  const secs=STYLES.map(s=>document.getElementById("s"+s.id));
+  function onScroll(){
+    let cur=secs[0];
+    const y=window.scrollY+120;
+    secs.forEach(s=>{ if(s && s.offsetTop<=y) cur=s; });
+    links.forEach(a=>a.classList.toggle("active", cur && a.getAttribute("href")==="#"+cur.id));
+  }
+  window.addEventListener("scroll", onScroll, {passive:true});
+  onScroll();
+}
+
+render();
+</script>
+</body>
+</html>
