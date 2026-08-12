@@ -99,7 +99,7 @@ a{color:var(--gold);text-decoration:none}
     <div class="hero">
       <h1>十种画风 × 三引擎对照</h1>
       <p>统一场景：雾中竹林溪涧旁女侠，手按剑柄，远山层叠，静谧肃杀。只换画风描述。</p>
-      <p>引擎列：Seedream 5.0 Pro（火山直连）· GPT Image · Gemini。GPT 的 07 青绿缺一张，已空位标注。</p>
+      <p>引擎列：Seedream 5.0 Pro（火山直连）· GPT Image · Gemini。10 类 × 3 引擎齐全。</p>
       <p>重复已清理：ChatGPT <code>14_09_20</code> 与 <code>14_09_29</code> 内容完全相同，只保留一张进 06 院体组。</p>
       <div class="meta">
         <span class="chip seed">Seedream 5.0 Pro</span>
@@ -207,8 +207,6 @@ const ENGINES = [
 ];
 
 function hasThumb(id, eng){
-  // 07 gpt missing
-  if(id==="07" && eng==="gpt") return false;
   return true;
 }
 function thumbPath(id, eng){
@@ -254,7 +252,7 @@ function render(){
       if(picks.has(key)) card.classList.add("selected");
       let body="";
       if(!hasThumb(s.id, eng.key)){
-        body='<div class="missing">本引擎未出图<br/>（GPT 缺 07 青绿）</div>';
+        body='<div class="missing">本引擎未出图</div>';
       }else{
         body='<div class="img-wrap" onclick="openLb(\''+fullPath(s.id,eng.key)+'\',\''+s.name+' · '+eng.label+'\')">'+
              '<img src="'+thumbPath(s.id,eng.key)+'" alt="'+s.name+' '+eng.label+'"></div>';
